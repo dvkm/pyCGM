@@ -22,7 +22,7 @@
 
 import array
 try:
-    import cStringIO as FileIO
+    from cStringIO import StringIO as FileIO
     cstringio = True
 except:
     from io import BytesIO as FileIO
