@@ -21,7 +21,7 @@
 '''A Python library for reading and writing C3D files.'''
 
 import array
-import cStringIO
+import io
 import numpy as np
 import operator
 import struct
@@ -213,7 +213,7 @@ class Param(object):
                  desc='',
                  bytes_per_element=1,
                  dimensions=None,
-                 bytes='',
+                 bytes=b'',
                  handle=None):
         '''Set up a new parameter with at least a name.
 
@@ -298,7 +298,7 @@ class Param(object):
         self.bytes_per_element, = struct.unpack('b', handle.read(1))
         dims, = struct.unpack('B', handle.read(1))
         self.dimensions = [struct.unpack('B', handle.read(1))[0] for _ in range(dims)]
-        self.bytes = ''
+        self.bytes = b''
         if self.total_bytes:
             self.bytes = handle.read(self.total_bytes)
         size, = struct.unpack('B', handle.read(1))
@@ -353,7 +353,7 @@ class Param(object):
         assert self.dimensions, \
             '{}: cannot get value as {} array!'.format(self.name, fmt)
         elems = array.array(fmt)
-        elems.fromstring(self.bytes)
+        elems.frombytes(self.bytes)
         return np.array(elems).reshape(self.dimensions)
 
     @property
@@ -754,7 +754,7 @@ class Reader(Manager):
         # boundary issues.
         bytes = self._handle.read(512 * parameter_blocks - 4)
         while bytes:
-            buf = cStringIO.StringIO(bytes)
+            buf = io.BytesIO(bytes)
 
             chars_in_name, group_id = struct.unpack('bb', buf.read(2))
             if group_id == 0 or chars_in_name == 0:
@@ -801,7 +801,7 @@ class Reader(Manager):
             the last frame of data.
 
         onlyXYZ : bool
-            If onlyXYZ is set to True the point will be only three dimensions 
+            If onlyXYZ is set to True the point will be only three dimensions
             without the error and camera values.
 
         Returns
