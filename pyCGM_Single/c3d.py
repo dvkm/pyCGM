@@ -22,9 +22,12 @@
 
 import array
 try:
-    import io
+    import cStringIO as FileIO
+    cstringio = True
 except:
-    print("Could not import cStringIO, this is expected on python 3")
+    from io import BytesIO as FileIO
+    cstringio = False
+
 import numpy as np
 import operator
 import struct
@@ -216,7 +219,7 @@ class Param(object):
                  desc='',
                  bytes_per_element=1,
                  dimensions=None,
-                 bytes=b'',
+                 param_bytes=b'',
                  handle=None):
         '''Set up a new parameter with at least a name.
 
@@ -241,7 +244,9 @@ class Param(object):
         self.desc = desc
         self.bytes_per_element = bytes_per_element
         self.dimensions = dimensions or []
-        self.bytes = bytes
+        self.bytes = param_bytes
+        if cstringio:
+            self.bytes = bytes(param_bytes)
 
         if handle:
             self.read(handle)
@@ -252,7 +257,7 @@ class Param(object):
     @property
     def num_elements(self):
         '''Return the number of elements in this parameter's array value.'''
-        return reduce(operator.mul, self.dimensions, 1)  # noqa: F821
+        return reduce(operator.mul, self.dimensions, 1)
 
     @property
     def total_bytes(self):
@@ -262,15 +267,14 @@ class Param(object):
     def binary_size(self):
         '''Return the number of bytes needed to store this parameter.'''
         return (
-            1 +  # group_id
-            2 +  # next offset marker
-            1 + len(self.name) +  # size of name and name bytes
-            1 +  # data size
-            # size of dimensions and dimension bytes
-            1 + len(self.dimensions) +
-            self.total_bytes +  # data
-            1 + len(self.desc)  # size of desc and desc bytes
-        )
+            1 + # group_id
+            2 + # next offset marker
+            1 + len(self.name) + # size of name and name bytes
+            1 + # data size
+            1 + len(self.dimensions) + # size of dimensions and dimension bytes
+            self.total_bytes + # data
+            1 + len(self.desc) # size of desc and desc bytes
+            )
 
     def write(self, group_id, handle):
         '''Write binary data for this parameter to a file handle.
@@ -284,8 +288,7 @@ class Param(object):
         '''
         handle.write(struct.pack('bb', len(self.name), group_id))
         handle.write(self.name)
-        handle.write(struct.pack(
-            '<h', self.binary_size() - 2 - len(self.name)))
+        handle.write(struct.pack('<h', self.binary_size() - 2 - len(self.name)))
         handle.write(struct.pack('b', self.bytes_per_element))
         handle.write(struct.pack('B', len(self.dimensions)))
         handle.write(struct.pack('B' * len(self.dimensions), *self.dimensions))
@@ -302,8 +305,7 @@ class Param(object):
         '''
         self.bytes_per_element, = struct.unpack('b', handle.read(1))
         dims, = struct.unpack('B', handle.read(1))
-        self.dimensions = [struct.unpack('B', handle.read(1))[
-            0] for _ in range(dims)]
+        self.dimensions = [struct.unpack('B', handle.read(1))[0] for _ in range(dims)]
         self.bytes = b''
         if self.total_bytes:
             self.bytes = handle.read(self.total_bytes)
@@ -359,7 +361,10 @@ class Param(object):
         assert self.dimensions, \
             '{}: cannot get value as {} array!'.format(self.name, fmt)
         elems = array.array(fmt)
-        elems.frombytes(self.bytes)
+        if cstringio:
+            elems.fromstring(self.bytes)
+        else:
+            elems.frombytes(self.bytes)
         return np.array(elems).reshape(self.dimensions)
 
     @property
@@ -443,10 +448,10 @@ class Group(dict):
     def binary_size(self):
         '''Return the number of bytes to store this group and its parameters.'''
         return (
-            1 +  # group_id
-            1 + len(self.name) +  # size of name and name bytes
-            2 +  # next offset marker
-            1 + len(self.desc) +  # size of desc and desc bytes
+            1 + # group_id
+            1 + len(self.name) + # size of name and name bytes
+            2 + # next offset marker
+            1 + len(self.desc) + # size of desc and desc bytes
             sum(p.binary_size() for p in self.itervalues()))
 
     def write(self, group_id, handle):
@@ -722,8 +727,8 @@ class Reader(Manager):
     You can iterate over the frames in the file by calling `read_frames()` after
     construction:
 
-    >>> r = c3d.Reader(open('capture.c3d', 'rb')) #doctest: +SKIP
-    >>> for frame_no, points, analog in r.read_frames(): #doctest: +SKIP
+    >>> r = c3d.Reader(open('capture.c3d', 'rb'))
+    >>> for frame_no, points, analog in r.read_frames():
     ...     print('{0.shape} points in this frame'.format(points))
     '''
 
@@ -760,7 +765,7 @@ class Reader(Manager):
         # boundary issues.
         bytes = self._handle.read(512 * parameter_blocks - 4)
         while bytes:
-            buf = io.BytesIO(bytes)
+            buf = FileIO(bytes)
 
             chars_in_name, group_id = struct.unpack('bb', buf.read(2))
             if group_id == 0 or chars_in_name == 0:
@@ -788,17 +793,13 @@ class Reader(Manager):
                     group.desc = desc
                     self[name] = group
                 else:
-                    try:
-                        self.add_group(group_id, name, desc)
-                    except:
-                        print("C3D Conflict of Information: ",
-                              group_id, name, desc)
+                    self.add_group(group_id, name, desc)
 
             bytes = bytes[2 + abs(chars_in_name) + offset_to_next:]
 
         self.check_metadata()
 
-    def read_frames(self, copy=True, onlyXYZ=False):
+    def read_frames(self, copy=True,onlyXYZ=False):
         '''Iterate over the data frames from our C3D file handle.
 
         Arguments
@@ -839,9 +840,9 @@ class Reader(Manager):
 
         point_dtype = [np.int16, np.float32][is_float]
         point_scale = [scale, 1][is_float]
-        dim = 5
-        if onlyXYZ == True:
-            dim = 3
+        dim=5
+        if onlyXYZ==True:
+            dim=3
         points = np.zeros((ppf, dim), float)
 
         # TODO: handle ANALOG:BITS parameter here!
@@ -870,15 +871,15 @@ class Reader(Manager):
             gen_scale = param.float_value
 
         self._handle.seek((self.header.data_block - 1) * 512)
-        for frame_no in xrange(self.first_frame(), self.last_frame() + 1):  # noqa: F821
+        for frame_no in xrange(self.first_frame(), self.last_frame() + 1):
             raw = np.fromfile(self._handle, dtype=point_dtype,
-                              count=4 * self.header.point_count).reshape((ppf, 4))
+                count=4 * self.header.point_count).reshape((ppf, 4))
 
             points[:, :3] = raw[:, :3] * point_scale
 
             valid = raw[:, 3] > -1
-            if onlyXYZ == True:
-                points[~valid, :] = np.nan
+            if onlyXYZ==True:
+                points[~valid,:] = np.nan
             else:
                 points[~valid, 3:5] = -1
                 c = raw[valid, 3].astype(np.uint16)
@@ -887,12 +888,11 @@ class Reader(Manager):
                 points[valid, 3] = (c & 0xff).astype(float) * scale
 
                 # fifth value is number of bits set in camera-observation byte
-                points[valid, 4] = sum(
-                    (c & (1 << k)) >> k for k in range(8, 17))
+                points[valid, 4] = sum((c & (1 << k)) >> k for k in range(8, 17))
 
             if self.header.analog_count > 0:
                 raw = np.fromfile(self._handle, dtype=analog_dtype,
-                                  count=self.header.analog_count).reshape((-1, apf))
+                    count=self.header.analog_count).reshape((-1, apf))
                 analog = (raw.astype(float) - offsets) * scales * gen_scale
 
             if copy:
@@ -904,10 +904,10 @@ class Reader(Manager):
 class Writer(Manager):
     '''This class manages the task of writing metadata and frames to a C3D file.
 
-    >>> r = c3d.Reader(open('data.c3d', 'rb')) #doctest: +SKIP
-    >>> frames = smooth_frames(r.read_frames()) #doctest: +SKIP
-    >>> w = c3d.Writer(open('smoothed.c3d', 'wb')) #doctest: +SKIP
-    >>> w.write_from_reader(frames, r) #doctest: +SKIP
+    >>> r = c3d.Reader(open('data.c3d', 'rb'))
+    >>> frames = smooth_frames(r.read_frames())
+    >>> w = c3d.Writer(open('smoothed.c3d', 'wb'))
+    >>> w.write_from_reader(frames, r)
     '''
 
     def __init__(self, handle):
@@ -940,10 +940,8 @@ class Writer(Manager):
         assert self._handle.tell() == 512
 
         # groups
-        self._handle.write(struct.pack(
-            'BBBB', 0, 0, self.parameter_blocks(), 84))
-        id_groups = sorted((i, g)
-                           for i, g in self.iteritems() if isinstance(i, int))
+        self._handle.write(struct.pack('BBBB', 0, 0, self.parameter_blocks(), 84))
+        id_groups = sorted((i, g) for i, g in self.iteritems() if isinstance(i, int))
         for group_id, group in id_groups:
             group.write(group_id, self._handle)
 
@@ -1032,7 +1030,7 @@ class Writer(Manager):
         point_group.add_param('LABELS', desc='labels',
                               data_size=-1,
                               dimensions=[5, ppf],
-                              bytes=''.join('M%03d ' % i for i in xrange(ppf)))  # noqa: F821
+                              bytes=''.join('M%03d ' % i for i in xrange(ppf)))
         point_group.add_param('DESCRIPTIONS', desc='descriptions',
                               data_size=-1,
                               dimensions=[16, ppf],
@@ -1088,5 +1086,4 @@ class Writer(Manager):
         frames: A sequence of frames to write.
         reader: Copy metadata from this reader to the output file.
         '''
-        self.write_like_phasespace(
-            frames, reader.end_field(), reader.frame_rate())
+        self.write_like_phasespace(frames, reader.end_field(), reader.frame_rate())
