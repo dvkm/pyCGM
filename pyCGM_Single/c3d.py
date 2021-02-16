@@ -22,9 +22,11 @@
 
 import array
 try:
-    import io
+    import cStringIO as FileIO
+    cstringio = True
 except:
-    print("Could not import cStringIO, this is expected on python 3")
+    from io import BytesIO as FileIO
+    cstringio = False
 import numpy as np
 import operator
 import struct
@@ -216,7 +218,7 @@ class Param(object):
                  desc='',
                  bytes_per_element=1,
                  dimensions=None,
-                 bytes=b'',
+                 param_bytes=b'',
                  handle=None):
         '''Set up a new parameter with at least a name.
 
@@ -241,7 +243,8 @@ class Param(object):
         self.desc = desc
         self.bytes_per_element = bytes_per_element
         self.dimensions = dimensions or []
-        self.bytes = bytes
+        if cstringio:
+            self.bytes = bytes(param_bytes)
 
         if handle:
             self.read(handle)
@@ -359,7 +362,10 @@ class Param(object):
         assert self.dimensions, \
             '{}: cannot get value as {} array!'.format(self.name, fmt)
         elems = array.array(fmt)
-        elems.frombytes(self.bytes)
+        if cstringio:
+            elems.fromstring(self.bytes)
+        else:
+            elems.frombytes(self.bytes)
         return np.array(elems).reshape(self.dimensions)
 
     @property
@@ -760,7 +766,7 @@ class Reader(Manager):
         # boundary issues.
         bytes = self._handle.read(512 * parameter_blocks - 4)
         while bytes:
-            buf = io.BytesIO(bytes)
+            buf = FileIO(bytes)
 
             chars_in_name, group_id = struct.unpack('bb', buf.read(2))
             if group_id == 0 or chars_in_name == 0:
