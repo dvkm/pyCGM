@@ -36,7 +36,7 @@ def pelvisJointCenter(frame):
     Takes in a dictionary of x,y,z positions and marker names, as well as an index
     Calculates the pelvis joint center and axis and returns both.
 
-    Markers used: RASI,LASI,RPSI,LPSI
+    Markers used: RASI, LASI, RPSI, LPSI
     Other landmarks used: origin, sacrum
 
     Pelvis X_axis: Computed with a Gram-Schmidt orthogonalization procedure(ref. Kadaba 1990) and then normalized.
@@ -51,34 +51,30 @@ def pelvisJointCenter(frame):
     Returns
     -------
     pelvis : array
-        Returns an array that contains the pelvis origin in a 1x3 array of xyz values,
-        which is then followed by a 4x1x3 array composed of the pelvis x, y, z
+        Returns an array that contains the pelvis origin in a :math:`1\\times3` array of xyz values,
+        which is then followed by a :math:`4 \\times 1 \\times 3` array composed of the pelvis x, y, z
         axis components, and the sacrum x,y,z position.
 
     Examples
     --------
     >>> import numpy as np
     >>> from .pyCGM import pelvisJointCenter
-    >>> frame = {'RASI': np.array([ 395.36532593,  428.09790039, 1036.82763672]),
-    ...          'LASI': np.array([ 183.18504333,  422.78927612, 1033.07299805]),
-    ...          'RPSI': np.array([ 341.41815186,  246.72117615, 1055.99145508]),
-    ...          'LPSI': np.array([ 255.79994202,  241.42199707, 1057.30065918]) }
+    >>> frame = {'RASI': np.array([ 395, 428, 1036]),
+    ...          'LASI': np.array([ 183, 422, 1033]),
+    ...          'RPSI': np.array([ 341, 246, 1055]),
+    ...          'LPSI': np.array([ 255, 241, 1057]) }
     >>> pelvisJointCenter(frame) #doctest: +NORMALIZE_WHITESPACE
-    [array([ 289.27518463,  425.44358826, 1034.95031739]),
-    array([[ 289.25243803,  426.43632163, 1034.8321521 ],
-    [ 288.27565385,  425.41858059, 1034.93263018],
-    [ 289.25467091,  425.56129577, 1035.94315379]]),
-    array([ 298.60904694,  244.07158661, 1056.64605713])]
+    [array([ 289. ,  425. , 1034.5]), array([[ 288.97356163,  425.99275625, 1034.38279911],
+    [ 288.00050025,  424.97171227, 1034.48585614],
+    [ 288.98264324,  425.11676832, 1035.4930075 ]]), array([ 298. ,  243.5, 1056. ])]
 
-    >>> frame = {'RASI': np.array([ 395.36532593,  428.09790039, 1036.82763672]),
-    ...          'LASI': np.array([ 183.18504333,  422.78927612, 1033.07299805]),
-    ...          'SACR': np.array([ 294.60904694,  242.07158661, 1049.64605713]) }
+    >>> frame = {'RASI': np.array([ 395,  428, 1036]),
+    ...          'LASI': np.array([ 183,  422, 1033]),
+    ...          'SACR': np.array([ 294,  242, 1049]) }
     >>> pelvisJointCenter(frame) #doctest: +NORMALIZE_WHITESPACE
-    [array([ 289.27518463,  425.44358826, 1034.95031739]),
-    array([[ 289.25166321,  426.44012508, 1034.87056085],
-    [ 288.27565385,  425.41858059, 1034.93263018],
-    [ 289.25556415,  425.52289134, 1035.94697483]]),
-    array([ 294.60904694,  242.07158661, 1049.64605713])]
+    [array([ 289. ,  425. , 1034.5]), array([[ 288.97291419,  425.99651005, 1034.42104387],
+    [ 288.00050025,  424.97171227, 1034.48585614],
+    [ 288.98367201,  425.07853354, 1035.49677775]]), array([ 294,  242, 1049])]
     """
     # Get the Pelvis Joint Centre
 
@@ -139,24 +135,26 @@ def pelvisJointCenter(frame):
 
     return pelvis
 
-def hipJointCenter(frame,pel_origin,pel_x,pel_y,pel_z,vsk=None):
+
+def hipJointCenter(frame, pel_origin, pel_x, pel_y, pel_z, vsk=None):
     """Calculate the hip joint center function.
 
-    Takes in a dictionary of x,y,z positions and marker names, as well as an index.
-    Calculates the hip joint center and returns the hip joint center.
+    Takes in a dictionary of x,y,z positions and marker names, as well as an
+    index. Calculates the hip joint center and returns the hip joint center.
 
     Other landmarks used: origin, sacrum
-    Subject Measurement values used: MeanLegLength, R_AsisToTrocanterMeasure, InterAsisDistance, L_AsisToTrocanterMeasure
 
-    Hip Joint Center: Computed using Hip Joint Center Calculation (ref. Davis_1991)
+    Subject Measurement values used: MeanLegLength, R_AsisToTrocanterMeasure,
+    InterAsisDistance, L_AsisToTrocanterMeasure
+
+    Hip Joint Center: Computed using Hip Joint Center Calculation [1]_.
 
     Parameters
     ----------
-    frame : dict
+    frame : dict, optional
         Dictionaries of marker lists.
     pel_origin : array
-        An array of pel_origin, pel_x, pel_y, pel_z each x,y,z position.
-            [(),(),()]
+        An array of pelvis origin, (pel_x, pel_y, pel_z) each x, y, z position.
     pel_x, pel_y, pel_z : int
         Respective axes of the pelvis.
     vsk : dict, optional
@@ -165,23 +163,30 @@ def hipJointCenter(frame,pel_origin,pel_x,pel_y,pel_z,vsk=None):
     Returns
     -------
     hip_JC : array
-        Returns a 2x3 array that contains the left hip joint center, a 1x3 array containing the x,y,z components
-        followed by the right hip joint center, another 1x3 array containing the x,y,z components.
+        Returns a 2x3 array that contains two :math:`1 \\times 3` arrays
+        containing the x, y, z components of the left and right hip joint
+        centers.
+
+    References
+    ----------
+    .. [1] Davis, R. B., III, Õunpuu, S., Tyburski, D. and Gage, J. R. (1991).
+            A gait analysis data collection and reduction technique.
+            Human Movement Science 10 575–87.
 
     Examples
     --------
     >>> import numpy as np
     >>> from .pyCGM import hipJointCenter
     >>> frame = None
-    >>> vsk = {'MeanLegLength': 940.0, 'R_AsisToTrocanterMeasure': 72.512,
-    ...        'L_AsisToTrocanterMeasure': 72.512, 'InterAsisDistance': 215.908996582031}
-    >>> pel_origin = [ 251.60830688, 391.74131775, 1032.89349365]
-    >>> pel_x = [251.74063624, 392.72694721, 1032.78850073]
-    >>> pel_y = [250.61711554, 391.87232862, 1032.8741063]
-    >>> pel_z = [251.60295336, 391.84795134, 1033.88777762]
-    >>> hipJointCenter(frame,pel_origin,pel_x,pel_y,pel_z,vsk)
-    array([[182.57097799, 339.43231799, 935.52900136],
-           [308.38050352, 322.80342433, 937.98979092]])
+    >>> vsk = {'MeanLegLength': 940, 'R_AsisToTrocanterMeasure': 72,
+    ...        'L_AsisToTrocanterMeasure': 72, 'InterAsisDistance': 215}
+    >>> pel_origin = [ 251, 391, 1032]
+    >>> pel_x = [251, 392, 1032]
+    >>> pel_y = [250, 391, 1032]
+    >>> pel_z = [251, 391, 1033]
+    >>> hipJointCenter(frame,pel_origin,pel_x,pel_y,pel_z,vsk) #doctest: +NORMALIZE_WHITESPACE
+    array([[187.99070455, 341.01659272, 930.14188199],
+        [314.00929545, 341.01659272, 930.14188199]])
 
     """
     #Get Global Values
@@ -254,31 +259,36 @@ def hipJointCenter(frame,pel_origin,pel_x,pel_y,pel_z,vsk=None):
 
     return hip_JC
 
-def hipAxisCenter(l_hip_jc,r_hip_jc,pelvis_axis):
+
+def hipAxisCenter(l_hip_jc, r_hip_jc, pelvis_axis):
     """Calculate the hip joint axis function.
 
     Takes in a hip joint center of x,y,z positions as well as an index.
-    and takes the hip joint center and pelvis origin/axis from previous functions.
-    Calculates the hip axis and returns hip joint origin and axis.
+    and takes the hip joint center and pelvis origin/axis from previous
+    functions. Calculates the hip axis and returns hip joint origin and axis.
 
-    Hip center axis: Computed by taking the mean at each x,y,z axis of the left and right hip joint center.
-    Hip axis: Computed by getting the summation of the pelvis and hip center axes.
+    Hip center axis: Computed by taking the mean at each x,y,z axis of the
+    left and right hip joint center.
+
+    Hip axis: Computed by getting the summation of the pelvis and hip center
+    axes.
 
     Parameters
     ----------
     l_hip_jc, r_hip_jc: array
         Array of R_hip_jc and L_hip_jc each x,y,z position.
     pelvis_axis : array
-        An array of pelvis origin and axis. The axis is also composed of 3 arrays,
-        each things are x axis, y axis, z axis.
+        An array of pelvis origin and axis. The axis is also composed of 3
+        arrays, each things are x axis, y axis, z axis.
 
     Returns
     -------
     hipaxis_center, axis : array
-        Returns an array that contains the hip axis center in a 1x3 array of xyz values,
-        which is then followed by a 3x2x3 array composed of the hip axis center x, y, and z
-        axis components. The xyz axis components are 2x3 arrays consisting of the axis center
-        in the first dimension and the direction of the axis in the second dimension.
+        Returns an array that contains the hip axis center in a 1x3 array of
+        xyz values, which is then followed by a 3x2x3 array composed of the hip
+        axis center x, y, and z axis components. The xyz axis components are
+        :math:`2 \\ times 3` arrays consisting of the axis center in the first
+        dimension and the direction of the axis in the second dimension.
 
 
     Examples
@@ -317,36 +327,42 @@ def hipAxisCenter(l_hip_jc,r_hip_jc,pelvis_axis):
 
     return [hipaxis_center,axis]
 
-def kneeJointCenter(frame,hip_JC,delta,vsk=None):
+
+def kneeJointCenter(frame, hip_JC, delta, vsk=None):
     """Calculate the knee joint center and axis function.
 
-    Takes in a dictionary of xyz positions and marker names, as well as an index.
-    and takes the hip axis and pelvis axis.
+    Takes in a dictionary of xyz positions and marker names, as well as an
+    index. and takes the hip axis and pelvis axis.
     Calculates the knee joint axis and returns the knee origin and axis
 
     Markers used: RTHI, LTHI, RKNE, LKNE, hip_JC
     Subject Measurement values used: RightKneeWidth, LeftKneeWidth
 
-    Knee joint center: Computed using Knee Axis Calculation(ref. Clinical Gait Analysis hand book, Baker2013)
+    Knee joint center: Computed using Knee Axis Calculation(ref. Clinical Gait
+    Analysis hand book, Baker2013)
 
     Parameters
     ----------
     frame : dict
         dictionaries of marker lists.
     hip_JC : array
-        An array of hip_JC containing the x,y,z axes marker positions of the hip joint center.
+        An array of hip_JC containing the x,y,z axes marker positions of the
+        hip joint center.
     delta : float
-        The length from marker to joint center, retrieved from subject measurement file.
+        The length from marker to joint center, retrieved from subject
+        measurement file.
     vsk : dict, optional
         A dictionary containing subject measurements from a VSK file.
 
     Returns
     -------
     R, L, axis : array
-        Returns an array that contains the knee axis center in a 1x3 array of xyz values,
-        which is then followed by a 2x3x3 array composed of the knee axis center x, y, and z
-        axis components. The xyz axis components are 2x3 arrays consisting of the axis center
-        in the first dimension and the direction of the axis in the second dimension.
+        Returns an array that contains the knee axis center in a 1x3 array of
+        xyz values, which is then followed by a :math:`2 \\times 3 \\times 3`
+        array composed of the knee axis center x, y, and z axis components. The
+        xyz axis components are :math:`2 \\times 3` arrays consisting of the
+        axis center in the first dimension and the direction of the axis in the
+        second dimension.
 
     Modifies
     --------
