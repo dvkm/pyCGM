@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 #pyCGM
 
 # Copyright (c) 2015 Mathew Schwartz <umcadop@gmail.com>
@@ -137,7 +138,7 @@ def pelvisJointCenter(frame):
 
 
 def hipJointCenter(frame, pel_origin, pel_x, pel_y, pel_z, vsk=None):
-    """Calculate the hip joint center function.
+    u"""Calculate the hip joint center function.
 
     Takes in a dictionary of x,y,z positions and marker names, as well as an
     index. Calculates the hip joint center and returns the hip joint center.
