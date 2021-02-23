@@ -32,7 +32,7 @@ from .pycgmIO import *
 
 # Lowerbody Coordinate System
 def pelvisJointCenter(frame):
-    """Make the Pelvis Axis function
+    """Make the Pelvis Axis.
 
     Takes in a dictionary of x,y,z positions and marker names, as well as an index
     Calculates the pelvis joint center and axis and returns both.
@@ -138,7 +138,7 @@ def pelvisJointCenter(frame):
 
 
 def hipJointCenter(frame, pel_origin, pel_x, pel_y, pel_z, vsk=None):
-    u"""Calculate the hip joint center function.
+    u"""Calculate the hip joint center.
 
     Takes in a dictionary of x,y,z positions and marker names, as well as an
     index. Calculates the hip joint center and returns the hip joint center.
@@ -164,7 +164,7 @@ def hipJointCenter(frame, pel_origin, pel_x, pel_y, pel_z, vsk=None):
     Returns
     -------
     hip_JC : array
-        Returns a 2x3 array that contains two :math:`1 \\times 3` arrays
+        Returns a :math:`2 \\times 3` array that contains two :math:`1 \\times 3` arrays
         containing the x, y, z components of the left and right hip joint
         centers.
 
@@ -262,11 +262,10 @@ def hipJointCenter(frame, pel_origin, pel_x, pel_y, pel_z, vsk=None):
 
 
 def hipAxisCenter(l_hip_jc, r_hip_jc, pelvis_axis):
-    """Calculate the hip joint axis function.
+    """Calculate the hip joint axis.
 
-    Takes in a hip joint center of x,y,z positions as well as an index.
-    and takes the hip joint center and pelvis origin/axis from previous
-    functions. Calculates the hip axis and returns hip joint origin and axis.
+    Takes in a hip joint center of x,y,z positions and pelvis axis, and
+    calculates the hip axis and returns the hip joint origin and axis.
 
     Hip center axis: Computed by taking the mean at each x,y,z axis of the
     left and right hip joint center.
@@ -276,19 +275,22 @@ def hipAxisCenter(l_hip_jc, r_hip_jc, pelvis_axis):
 
     Parameters
     ----------
-    l_hip_jc, r_hip_jc: array
-        Array of R_hip_jc and L_hip_jc each x,y,z position.
+    l_hip_jc, r_hip_jc : array
+        left and right hip joint center with x, y, z position in an array.
     pelvis_axis : array
-        An array of pelvis origin and axis. The axis is also composed of 3
-        arrays, each things are x axis, y axis, z axis.
+        An array of pelvis origin and axis. The first element is an
+        :math:`1 \\times 3` array containing the x, y, z axis of the origin.
+        The second elemnt is a :math:`3 \\times 3` containing 3 arrays of
+        x, y, z coordinates of the individual pelvis axis.
 
     Returns
     -------
     hipaxis_center, axis : array
-        Returns an array that contains the hip axis center in a 1x3 array of
-        xyz values, which is then followed by a 3x2x3 array composed of the hip
-        axis center x, y, and z axis components. The xyz axis components are
-        :math:`2 \\ times 3` arrays consisting of the axis center in the first
+        Returns an array that contains the hip axis center in a
+        :math:`1 \\times 3` array of xyz values, which is then followed by a
+        :math:`3 \\times 2 \\times 3` array composed of the hip axis center
+        x, y, and z axis components. The xyz axis components are
+        :math:`2 \\times 3` arrays consisting of the axis center in the first
         dimension and the direction of the axis in the second dimension.
 
 
@@ -296,18 +298,16 @@ def hipAxisCenter(l_hip_jc, r_hip_jc, pelvis_axis):
     --------
     >>> import numpy as np
     >>> from .pyCGM import hipAxisCenter
-    >>> r_hip_jc = [182.57097863, 339.43231855, 935.529000126]
-    >>> l_hip_jc = [308.38050472, 322.80342417, 937.98979061]
-    >>> pelvis_axis = [np.array([251.60830688, 391.74131775, 1032.89349365]),
-    ...                np.array([[251.74063624, 392.72694721, 1032.78850073],
-    ...                    [250.61711554, 391.87232862, 1032.8741063],
-    ...                    [251.60295336, 391.84795134, 1033.88777762]]),
-    ...                np.array([231.57849121, 210.25262451, 1052.24969482])]
-    >>> [np.around(arr,8) for arr in hipAxisCenter(l_hip_jc,r_hip_jc,pelvis_axis)] #doctest: +NORMALIZE_WHITESPACE
-    [array([245.47574168, 331.11787136, 936.75939537]),
-    array([[245.60807104, 332.10350082, 936.65440245],
-           [244.48455034, 331.24888223, 936.74000802],
-           [245.47038816, 331.22450495, 937.75367934]])]
+    >>> r_hip_jc = [182, 339, 935]
+    >>> l_hip_jc = [308, 322, 937]
+    >>> pelvis_axis = [np.array([251, 391, 1032]),
+    ...                np.array([[251, 392, 1032],
+    ...                    [250, 391, 1032],
+    ...                    [251, 391, 1033]]),
+    ...                np.array([231, 210, 1052])]
+    >>> hipAxisCenter(l_hip_jc,r_hip_jc,pelvis_axis) #doctest: +NORMALIZE_WHITESPACE
+    [[245.0, 330.5, 936.0],
+    [[245.0, 331.5, 936.0], [244.0, 330.5, 936.0], [245.0, 330.5, 937.0]]]
     """
 
     # Get shared hip axis, it is inbetween the two hip joint centers
@@ -330,11 +330,11 @@ def hipAxisCenter(l_hip_jc, r_hip_jc, pelvis_axis):
 
 
 def kneeJointCenter(frame, hip_JC, delta, vsk=None):
-    """Calculate the knee joint center and axis function.
+    """Calculate the knee joint center and axis.
 
-    Takes in a dictionary of xyz positions and marker names, as well as an
-    index. and takes the hip axis and pelvis axis.
-    Calculates the knee joint axis and returns the knee origin and axis
+    Takes in a dictionary of marker names to x, y, z positions, the hip axis
+    and pelvis axis. Calculates the knee joint axis and returns the knee origin
+    and axis.
 
     Markers used: RTHI, LTHI, RKNE, LKNE, hip_JC
     Subject Measurement values used: RightKneeWidth, LeftKneeWidth
@@ -349,7 +349,7 @@ def kneeJointCenter(frame, hip_JC, delta, vsk=None):
     hip_JC : array
         An array of hip_JC containing the x,y,z axes marker positions of the
         hip joint center.
-    delta : float
+    delta : float, optional
         The length from marker to joint center, retrieved from subject
         measurement file.
     vsk : dict, optional
@@ -358,7 +358,7 @@ def kneeJointCenter(frame, hip_JC, delta, vsk=None):
     Returns
     -------
     R, L, axis : array
-        Returns an array that contains the knee axis center in a 1x3 array of
+        Returns an array that contains the knee axis center in a :math:`1 \\times 3` array of
         xyz values, which is then followed by a :math:`2 \\times 3 \\times 3`
         array composed of the knee axis center x, y, and z axis components. The
         xyz axis components are :math:`2 \\times 3` arrays consisting of the
@@ -374,22 +374,20 @@ def kneeJointCenter(frame, hip_JC, delta, vsk=None):
     >>> import numpy as np
     >>> from .pyCGM import kneeJointCenter
     >>> vsk = { 'RightKneeWidth' : 105.0, 'LeftKneeWidth' : 105.0 }
-    >>> frame = { 'RTHI': np.array([426.50338745, 262.65310669, 673.66247559]),
-    ...           'LTHI': np.array([51.93867874, 320.01849365, 723.03186035]),
-    ...           'RKNE': np.array([416.98687744, 266.22558594, 524.04089355]),
-    ...           'LKNE': np.array([84.62355804, 286.69122314, 529.39819336])}
-    >>> hip_JC = [[182.57097863, 339.43231855, 935.52900126],
-    ...         [309.38050472, 32280342417, 937.98979061]]
+    >>> frame = { 'RTHI': np.array([426.0, 262.0, 673.0]),
+    ...           'LTHI': np.array([51.0, 320.0, 723.0]),
+    ...           'RKNE': np.array([416.0, 266.0, 524.0]),
+    ...           'LKNE': np.array([84.0, 286.0, 529.0])}
+    >>> hip_JC = [[182.0, 339.0, 935.0],
+    ...         [309.0, 32280342417, 937.0]]
     >>> delta = 0
     >>> kneeJointCenter(frame,hip_JC,delta,vsk) #doctest: +NORMALIZE_WHITESPACE
-    [array([413.21007973, 266.22558784, 464.66088466]),
-    array([143.55478579, 279.90370346, 524.78408753]),
-    array([[[414.20806312, 266.22558785, 464.59740907],
-    [413.14660414, 266.22558786, 463.66290127],
-    [413.21007973, 267.22558784, 464.66088468]],
-    [[143.65611281, 280.88685896, 524.63197541],
-    [142.56434499, 280.01777942, 524.86163553],
-    [143.64837987, 280.0465038 , 525.76940383]]])]
+    [array([412.01567483, 266.        , 464.63355485]), array([142.89606353, 278.88369813, 524.43251176]), array([[[413.01343026, 266.        , 464.5665914 ],
+            [411.94871138, 266.00000001, 463.63579942],
+            [412.01567483, 267.        , 464.63355487]],
+        [[143.00280898, 279.86598662, 524.27851584],
+            [141.90621372, 279.00329985, 524.50927627],
+            [142.98988659, 279.0279367 , 525.41759676]]])]
     """
 
 
@@ -494,10 +492,10 @@ def kneeJointCenter(frame, hip_JC, delta, vsk=None):
     return [R,L,axis]
 
 def ankleJointCenter(frame,knee_JC,delta,vsk=None):
-    """Calculate the ankle joint center and axis function.
+    """Calculate the ankle joint center and axis.
 
-    Takes in a dictionary of xyz positions and marker names, as well as an index.
-    and takes the knee axis.
+    Takes in a dictionary of marker names to x, y, z positions and the knee
+    joint center.
     Calculates the ankle joint axis and returns the ankle origin and axis
 
     Markers used: tib_R, tib_L, ank_R, ank_L, knee_JC
@@ -511,7 +509,7 @@ def ankleJointCenter(frame,knee_JC,delta,vsk=None):
         dictionaries of marker lists.
     knee_JC : array
         An array of knee_JC each x,y,z position.
-    delta : float
+    delta : float, optional
         The length from marker to joint center, retrieved from subject measurement file
     vsk : dict, optional
         A dictionary containing subject measurements from a VSK file.
@@ -519,9 +517,9 @@ def ankleJointCenter(frame,knee_JC,delta,vsk=None):
     Returns
     -------
     R, L, axis : array
-        Returns an array that contains the ankle axis origin in a 1x3 array of xyz values,
-        which is then followed by a 3x2x3 array composed of the ankle origin, x, y, and z
-        axis components. The xyz axis components are 2x3 arrays consisting of the origin
+        Returns an array that contains the ankle axis origin in a :math:`1 \\times 3` array of xyz values,
+        which is then followed by a :math:`3 \\times 2 \\times 3` array composed of the ankle origin, x, y, and z
+        axis components. The xyz axis components are :math:`2 \\times 3` arrays consisting of the origin
         in the first dimension and the direction of the axis in the second dimension.
 
     Examples
@@ -530,28 +528,28 @@ def ankleJointCenter(frame,knee_JC,delta,vsk=None):
     >>> from .pyCGM import ankleJointCenter
     >>> vsk = { 'RightAnkleWidth' : 70.0, 'LeftAnkleWidth' : 70.0,
     ...         'RightTibialTorsion': 0.0, 'LeftTibialTorsion' : 0.0}
-    >>> frame = { 'RTIB': np.array([433.97537231, 211.93408203, 273.3008728]),
-    ...           'LTIB': np.array([50.04016495, 235.90718079, 364.32226562]),
-    ...           'RANK': np.array([422.77005005, 217.74053955, 92.86152649]),
-    ...           'LANK': np.array([58.57380676, 208.54806519, 86.16953278]) }
-    >>> knee_JC = [np.array([364.17774614, 292.17051722, 515.19181496]),
-    ...           np.array([143.55478579, 279.90370346, 524.78408753]),
-    ...           np.array([[[364.64959153, 293.06758353, 515.18513093],
-    ...           [363.29019771, 292.60656648, 515.04309095],
-    ...           [364.04724541, 292.24216264, 516.18067112]],
-    ...           [[143.65611282, 280.88685896, 524.63197541],
-    ...           [142.56434499, 280.01777943, 524.86163553],
-    ...            [143.64837987, 280.04650381, 525.76940383]]])]
+    >>> frame = { 'RTIB': np.array([433.0, 211.0, 273.0]),
+    ...           'LTIB': np.array([50.0, 235.0, 364.0]),
+    ...           'RANK': np.array([422.0, 217.0, 92.0]),
+    ...           'LANK': np.array([58.0, 208.0, 86.0]) }
+    >>> knee_JC = [np.array([364.0, 292.0, 515.0]),
+    ...           np.array([143.0, 279.0, 524.0]),
+    ...           np.array([[[364.0, 293.0, 515.0],
+    ...           [363.0, 292.0, 515.0],
+    ...           [364.0, 292.0, 516.0]],
+    ...           [[143.0, 280.0, 524.0],
+    ...           [142.0, 280.0, 524.0],
+    ...            [143.0, 280.0, 525.0]]])]
     >>> delta = 0
     >>> ankleJointCenter(frame,knee_JC,delta,vsk) #doctest: +NORMALIZE_WHITESPACE
-    [array([393.76181609, 247.67829633,  87.73775041]),
-    array([ 98.74901939, 219.46930221,  80.63068161]),
-    [[array([394.48171575, 248.37201349,  87.715368  ]),
-    array([393.07114385, 248.39110006,  87.61575574]),
-    array([393.69314056, 247.78157916,  88.73002876])],
-    [array([ 98.47494966, 220.42553804,  80.52821783]),
-    array([ 97.79246671, 219.20927276,  80.76255902]),
-    array([ 98.84848169, 219.60345781,  81.61663776])]]]
+    [array([393.36370389, 247.2931075 ,  86.87260464]),
+    array([ 98.11999534, 219.11196211,  80.44029928]),
+    [[array([394.09205433, 247.97797298,  86.85104297]),
+    array([392.68188731, 248.01437196,  86.7505238 ]),
+    array([393.2956466 , 247.39672623,  87.86489057])],
+    [array([ 97.84148846, 220.06709428,  80.33952006]),
+    array([ 97.16475735, 218.84739159,  80.57267311]),
+    array([ 98.21976663, 219.24509728,  81.42636253])]]]
     """
 
     #Get Global Values
@@ -685,12 +683,12 @@ def ankleJointCenter(frame,knee_JC,delta,vsk=None):
     return [R,L,axis]
 
 def footJointCenter(frame,vsk,ankle_JC,knee_JC,delta):
-    """Calculate the foot joint center and axis function.
+    """Calculate the foot joint center and axis.
 
-    Takes in a dictionary of xyz positions and marker names.
-    and takes the ankle axis and knee axis.
-    Calculate the foot joint axis by rotating incorrect foot joint axes about offset angle.
-    Returns the foot axis origin and axis.
+    Takes in a dictionary of marker names to x, y, z positions, subject
+    measurements from the vsk file and the ankle joint center.
+    Calculate the foot joint axis by rotating incorrect foot joint axes about
+    offset angle.
 
     In case of foot joint center, we've already make 2 kinds of axis for static offset angle.
     and then, Call this static offset angle as an input of this function for dynamic trial.
@@ -721,59 +719,42 @@ def footJointCenter(frame,vsk,ankle_JC,knee_JC,delta):
     Returns
     -------
     R, L, foot_axis : array
-        Returns an array that contains the foot axis center in a 1x3 array of xyz values,
-        which is then followed by a 2x3x3 array composed of the foot axis center x, y, and z
-        axis components. The xyz axis components are 2x3 arrays consisting of the axis center
+        Returns an array that contains the foot axis center in a :math:`1 \\times 3` array of xyz values,
+        which is then followed by a :math:`2 \\times 3 \\times 3` array composed of the foot axis center x, y, and z
+        axis components. The xyz axis components are :math:`2 \\times 3` arrays consisting of the axis center
         in the first dimension and the direction of the axis in the second dimension.
         This function also saves the static offset angle in a global variable.
-
-    Modifies
-    --------
-    Axis changes following to the static info.
-
-    you can set the static_info by the button. and this will calculate the offset angles
-    the first setting, the foot axis show foot uncorrected anatomical reference axis(Z_axis point to the AJC from TOE)
-
-    if press the static_info button so if static_info is not None,
-    and then the static offsets angles are applied to the reference axis.
-    the reference axis is Z axis point to HEE from TOE
 
     Examples
     --------
     >>> import numpy as np
     >>> from .pyCGM import footJointCenter
-    >>> vsk = { 'RightStaticRotOff' : 0.015683497632642047, 'LeftStaticRotOff': 0.009402910292403012,
-    ...         'RightStaticPlantFlex' : 0.2702417907002758, 'LeftStaticPlantFlex': 0.20251085737834015}
-    >>> frame = { 'RHEE': np.array([374.01257324, 181.57929993, 49.50960922]),
-    ...           'LHEE': np.array([105.30126953, 180.2130127, 47.15660858]),
-    ...           'RTOE': np.array([442.81997681, 381.62280273, 42.66047668]),
-    ...           'LTOE': np.array([39.43652725, 382.44522095, 41.78911591])}
-    >>> knee_JC = [np.array([364.17774614, 292.17051722, 515.19181496]),
-    ...           np.array([143.55478579, 279.90370346, 524.78408753]),
-    ...           np.array([[[364.64959153, 293.06758353, 515.18513093],
-    ...           [363.29019771, 292.60656648, 515.04309095],
-    ...           [364.04724541, 292.24216264, 516.18067112]],
-    ...           [[143.65611282, 280.88685896, 524.63197541],
-    ...           [142.56434499, 280.01777943, 524.86163553],
-    ...           [143.64837987, 280.04650381, 525.76940383]]])]
-    >>> ankle_JC = [np.array([393.76181608, 247.67829633, 87.73775041]),
-    ...            np.array([98.74901939, 219.46930221, 80.6306816]),
-    ...            [[np.array([394.4817575, 248.37201348, 87.715368]),
-    ...            np.array([393.07114384, 248.39110006, 87.61575574]),
-    ...            np.array([393.69314056, 247.78157916, 88.73002876])],
-    ...            [np.array([98.47494966, 220.42553803, 80.52821783]),
-    ...            np.array([97.79246671, 219.20927275, 80.76255901]),
-    ...            np.array([98.84848169, 219.60345781, 81.61663775])]]]
+    >>> vsk = { 'RightStaticRotOff' : 0.0, 'LeftStaticRotOff': 0.0,
+    ...         'RightStaticPlantFlex' : 0.0, 'LeftStaticPlantFlex': 0.0}
+    >>> frame = { 'RHEE': np.array([374.0, 181.0, 49.0]),
+    ...           'LHEE': np.array([105.0, 180.0, 47.0]),
+    ...           'RTOE': np.array([442.0, 381.0, 42.0]),
+    ...           'LTOE': np.array([39.0, 382.0, 41.0])}
+    >>> knee_JC = [np.array([364.0, 292.0, 515.0]),
+    ...           np.array([143.0, 279.0, 524.0]),
+    ...           np.array([[[364.0, 293.0, 515.0],
+    ...           [363.0, 292.0, 515.0],
+    ...           [364.0, 292.0, 516.0]],
+    ...           [[143.0, 280.0, 524.0],
+    ...           [142.0, 280.0, 524.0],
+    ...           [143.0, 280.0, 525.0]]])]
+    >>> ankle_JC = [np.array([393.0, 247.0, 87.0]),
+    ...            np.array([98.0, 219.0, 80.0]),
+    ...            [[np.array([394.0, 248.0, 87.0]),
+    ...            np.array([393.0, 248.0, 87.0]),
+    ...            np.array([393.0, 247.0, 88.0])],
+    ...            [np.array([98.0, 220.0, 80.0]),
+    ...            np.array([97.0, 219.0, 80.0]),
+    ...            np.array([98.0, 219.0, 81.0])]]]
     >>> delta = 0
-    >>> [np.around(arr,8) for arr in footJointCenter(frame,vsk,ankle_JC,knee_JC,delta)] #doctest: +NORMALIZE_WHITESPACE
-    [array([442.81997681, 381.62280273,  42.66047668]),
-    array([ 39.43652725, 382.44522095,  41.78911591]),
-    array([[[442.84624127, 381.6513024 ,  43.65972537],
-            [441.87735057, 381.9563035 ,  42.67574106],
-            [442.48716163, 380.68048378,  42.69610043]],
-           [[ 39.56652626, 382.50901001,  42.77857597],
-            [ 38.49313328, 382.14606841,  41.93234851],
-            [ 39.74166341, 381.4931502 ,  41.81040459]]])]
+    >>> footJointCenter(frame,vsk,ankle_JC,knee_JC,delta) #doctest: +NORMALIZE_WHITESPACE
+    [array([442., 381.,  42.]), array([ 39., 382.,  41.]), [[[442.6764049995767, 381.0, 42.73652988842794], [441.3403011486552, 381.44468886933475, 42.60584588388808], [441.6724733566837, 380.1043148937881, 42.30078977447413]], [[39.0, 382.2326959032954, 41.97254954454235], [38.056739386641304,
+    381.6770616832086, 41.077267450029844], [39.332053331990785, 381.08263232009324, 41.219492880468486]]]]
     """
 
       #REQUIRED MARKERS:
@@ -955,7 +936,7 @@ def footJointCenter(frame,vsk,ankle_JC,knee_JC,delta):
 def headJC(frame,vsk=None):
     """Calculate the head joint axis function.
 
-    Takes in a dictionary of x,y,z positions and marker names.
+    Takes in a dictionary of marker names to x, y, z positions.
     Calculates the head joint center and returns the head joint center and axis.
 
     Markers used: LFHD, RFHD, LBHD, RBHD
@@ -971,8 +952,8 @@ def headJC(frame,vsk=None):
     Returns
     -------
     head_axis, origin : array
-        Returns an array containing a 1x3x3 array containing the x, y, z axis
-        components of the head joint center, and a 1x3 array containing the
+        Returns an array containing a :math:`1 \\times 3 \\times 3` array containing the x, y, z axis
+        components of the head joint center, and a :math:`1 \\times 3` array containing the
         head origin x, y, z position.
 
 
@@ -980,16 +961,15 @@ def headJC(frame,vsk=None):
     --------
     >>> import numpy as np
     >>> from .pyCGM import headJC
-    >>> vsk = { 'HeadOffset': 0.2571990469310653 }
-    >>> frame = {'RFHD': np.array([325.82983398, 402.55450439, 1722.49816895]),
-    ...          'LFHD': np.array([184.55158997, 409.68713379, 1721.34289551]),
-    ...          'RBHD': np.array([304.39898682, 242.91339111, 1694.97497559]),
-    ...          'LBHD': np.array([197.8621521, 251.28889465, 1696.90197754])}
+    >>> vsk = { 'HeadOffset': 0.0 }
+    >>> frame = {'RFHD': np.array([325.0, 402.0, 1722.0]),
+    ...          'LFHD': np.array([184.0, 409.0, 1721.0]),
+    ...          'RBHD': np.array([304.0, 242.0, 1694.0]),
+    ...          'LBHD': np.array([197.0, 251.0, 1696.0])}
     >>> [np.around(arr,8) for arr in headJC(frame,vsk)] #doctest: +NORMALIZE_WHITESPACE
-    [array([[ 255.21685583,  407.11593888, 1721.82538439],
-           [ 254.19105385,  406.14680918, 1721.91767712],
-           [ 255.1903437 ,  406.21600904, 1722.91599129]]),
-    array([ 255.19071198,  406.12081909, 1721.92053223])]
+    [array([[ 254.5248073 ,  406.48609036, 1721.66434839],
+       [ 253.50032966,  405.52555761, 1721.49754796],
+       [ 254.49338171,  405.33576661, 1722.48639931]]), array([ 254.5,  405.5, 1721.5])]
     """
 
     #Get Global Values
@@ -1055,7 +1035,7 @@ def headJC(frame,vsk=None):
 def thoraxJC(frame):
     """Calculate the thorax joint axis function.
 
-    Takes in a dictionary of x,y,z positions and marker names.
+    Takes in a dictionary of marker names to x, y, z positions.
     Calculates the thorax joint center and returns the thorax joint center and axis.
 
     Markers used: CLAV, C7, STRN, T10
@@ -1068,23 +1048,22 @@ def thoraxJC(frame):
     Returns
     -------
     thorax_axis, origin : array
-        Returns an array which contains a 2x3 array representing the right thorax joint center (1x3)
-        and the left thorax joint center (1x3), which is then followed by a 6x3 array representing the
-        right thorax x, y, z axis components (3x3) followed by the the left thorax x, y, z axis components (3x3).
+        Returns an array which contains a :math:`2 \\times 3` array representing the right thorax joint center :math:`1 \times 3`
+        and the left thorax joint center :math:`1 \times 3`, which is then followed by a :math:`6 \\times 3` array representing the
+        right thorax x, y, z axis components :math:`3 \times 3` followed by the the left thorax x, y, z axis components :math:`3 \times 3`.
 
     Examples
     --------
     >>> import numpy as np
     >>> from .pyCGM import thoraxJC
-    >>> frame = {'C7': np.array([256.78051758, 371.28042603, 1459.70300293]),
-    ...          'T10': np.array([228.64323425, 192.32041931, 1279.6418457]),
-    ...          'CLAV': np.array([256.78051758, 371.28042603, 1459.70300293]),
-    ...          'STRN': np.array([251.67492676, 414.10391235, 1292.08508301])}
+    >>> frame = {'C7': np.array([256.0, 371.0, 1459.0]),
+    ...          'T10': np.array([228.0, 192.0, 1279.0]),
+    ...          'CLAV': np.array([256.0, 371.0, 1459.0]),
+    ...          'STRN': np.array([251.0, 414.0, 1292.0])}
     >>> [np.around(arr,8) for arr in thoraxJC(frame)] #doctest: +NORMALIZE_WHITESPACE
-    [array([[ 256.34546332,  365.72239585, 1461.92089119],
-           [ 257.26637166,  364.696025  , 1462.23472346],
-           [ 256.18427318,  364.43288984, 1461.36304534]]),
-    array([ 256.27295428,  364.79605749, 1462.29053923])]
+    [array([[ 255.56616237,  365.44248597, 1461.21941945],
+       [ 256.48733126,  364.41655085, 1461.5339111 ],
+       [ 255.405658  ,  364.15275055, 1460.66190631]]), array([ 255.4938561 ,  364.51623363, 1461.58932269])]
     """
 
     #Set or get a marker size as mm
@@ -1144,8 +1123,7 @@ def thoraxJC(frame):
 def findwandmarker(frame,thorax):
     """Calculate the wand marker function.
 
-    Takes in a dictionary of x,y,z positions and marker names.
-    and takes the thorax axis.
+    Takes in a dictionary of marker names to x, y, z positions and the thorax axis.
     Calculates the wand marker for calculating the clavicle.
 
     Markers used: RSHO, LSHO
@@ -1161,22 +1139,22 @@ def findwandmarker(frame,thorax):
     -------
     wand : array
         Returns wand marker position for calculating knee joint center later.
-        The wand marker position is returned as a 2x3 array containing the
-        right wand marker x,y,z positions (1x3) followed by the left
-        wand marker x,y,z positions (1x3).
+        The wand marker position is returned as a :math:`2 \\times 3` array containing the
+        right wand marker x,y,z positions :math:`1 \times 3` followed by the left
+        wand marker x,y,z positions :math:`1 \times 3`.
 
     Examples
     --------
     >>> import numpy as np
     >>> from .pyCGM import findwandmarker
-    >>> frame = {'RSHO': np.array([428.88496562, 270.552948, 1500.73010254]),
-    ...          'LSHO': np.array([68.24668121, 269.01049805, 1510.1072998])}
-    >>> thorax = [[[256.23991128535846, 365.30496976939753, 1459.662169500559],
-    ...          [257.1435863244796, 364.21960599061947, 1459.5889787129829],
-    ...          [256.08430536580352, 354.32180498523223, 1458.6575930699294]],
-    ...          [256.14981023656401, 364.30906039339868, 1459.6553639290375]]
+    >>> frame = {'RSHO': np.array([428.0, 270.0, 1500.0]),
+    ...          'LSHO': np.array([68.0, 269.0, 1510.0])}
+    >>> thorax = [[[256.0, 365.0, 1459.0],
+    ...          [257.0, 364.0, 1459.0],
+    ...          [256.0, 354.0, 1458.0]],
+    ...          [256.0, 364.0, 1459.0]]
     >>> [np.around(arr,8) for arr in findwandmarker(frame,thorax)]
-    [array([ 255.92550246,  364.32269503, 1460.6297869 ]), array([ 256.42380097,  364.27770361, 1460.61658494])]
+    [array([ 255.76812462,  364.        , 1459.9727455 ]), array([ 256.26181402,  364.        , 1459.96511834])]
     """
     thorax_origin = thorax[1]
 
@@ -1219,8 +1197,8 @@ def findwandmarker(frame,thorax):
 def findshoulderJC(frame,thorax,wand,vsk=None):
     """Calculate the Shoulder joint center function.
 
-    Takes in a dictionary of x,y,z positions and marker names.
-    and takes the thorax axis and wand marker.
+    Takes in a dictionary of marker names to x, y, z positions and the thorax
+    axis and wand marker.
     Calculate each shoulder joint center and returns it.
 
     Markers used: RSHO, LSHO
@@ -1240,25 +1218,25 @@ def findshoulderJC(frame,thorax,wand,vsk=None):
     Returns
     -------
     Sho_JC : array
-        Returns a 2x3 array representing the right shoulder joint
-        center x, y, z, marker positions (1x3) followed by the left
-        shoulder joint center x, y, z, marker positions (1x3).
+        Returns a :math:`2 \\times 3` array representing the right shoulder joint
+        center x, y, z, marker positions :math:`1 \times 3` followed by the left
+        shoulder joint center x, y, z, marker positions :math:`1 \times 3`.
 
     Examples
     --------
     >>> import numpy as np
     >>> from .pyCGM import findshoulderJC
     >>> vsk = { 'RightShoulderOffset' : 40.0, 'LeftShoulderOffset' : 40.0 }
-    >>> frame = {'RSHO': np.array([428.88496562, 270.552948, 1500.73010254]),
-    ...          'LSHO': np.array([68.24668121, 269.01049805, 1510.1072998])}
-    >>> thorax = [[[256.23991128535846, 365.30496976939753, 1459.662169500559],
-    ...        [257.1435863244796, 364.21960599061947, 1459.5889787129829],
-    ...        [256.08430536580352, 354.32180498523223, 1458.6575930699294]],
-    ...        [256.14981023656401, 364.30906039339868, 1459.6553639290375]]
-    >>> wand = [[255.92550222678443, 364.32269504976051, 1460.6297868417887],
-    ...        [256.42380097331767, 364.27770361353487, 1460.6165849382387]]
+    >>> frame = {'RSHO': np.array([428.0, 270.0, 1500.0]),
+    ...          'LSHO': np.array([68.0, 269.0, 1510.0])}
+    >>> thorax = [[[256.0, 365.0, 1459.0],
+    ...        [257.0, 364.0, 1459.0],
+    ...        [256.0, 354.0, 1458.0]],
+    ...        [256.0, 364.0, 1459.0]]
+    >>> wand = [[255.0, 364.0, 1460.0],
+    ...        [256.0, 364.0, 1460.0]]
     >>> findshoulderJC(frame,thorax,wand,vsk)
-    [array([ 429.66971693,  275.06718208, 1453.95397769]), array([  64.51952733,  274.93442161, 1463.63133339])]
+    [array([ 434.48959862,  286.3674038 , 1456.42256085]), array([  67.20523086,  268.59838794, 1463.0084364 ])]
     """
 
     thorax_origin = thorax[1]
@@ -1291,13 +1269,12 @@ def findshoulderJC(frame,thorax,wand,vsk=None):
 def shoulderAxisCalc(frame,thorax,shoulderJC,wand):
     """Calculate the Shoulder joint axis ( Clavicle) function.
 
-    Takes in a dictionary of x,y,z positions and marker names, as well as an index.
-    and takes the thorax axis and wand marker and then, shoulder joint center.
+    Takes in the thorax axis, wand marker and shoulder joint center.
     Calculate each shoulder joint axis and returns it.
 
     Parameters
     ----------
-    frame : dict
+    frame : dict, optional
         Dictionaries of marker lists.
     thorax : array
         The x,y,z position of the thorax.
@@ -1333,23 +1310,22 @@ def shoulderAxisCalc(frame,thorax,shoulderJC,wand):
     >>> import numpy as np
     >>> from .pyCGM import shoulderAxisCalc
     >>> frame = None
-    >>> thorax = [[[256.23991128535846, 365.30496976939753, 1459.662169500559],
-    ...          [257.1435863244796, 364.21960599061947, 1459.5889787129829],
-    ...          [256.08430536580352, 354.32180498523223, 1458.6575930699294]],
-    ...          [256.14981023656401, 364.30906039339868, 1459.6553639290375]]
-    >>> shoulderJC = [np.array([429.66951995, 275.06718615, 1453.953978131]),
-    ...              np.array([64.51952734, 274.93442161, 1463.6313334])]
-    >>> wand = [[255.92550222678443, 364.32269504976051, 1460.6297868417887],
-    ...        [256.42380097331767, 364.27770361353487, 1460.6165849382387]]
+    >>> thorax = [[[256.0, 365.0, 1459.0],
+    ...          [257.0, 364.0, 1459.0],
+    ...          [256.0, 354.0, 1458.0]],
+    ...          [256.0, 364.0, 1459.0]]
+    >>> shoulderJC = [np.array([429.0, 275.0, 1453.0]),
+    ...              np.array([64.0, 274.0, 1463.0])]
+    >>> wand = [[255.0, 364.0, 1460.0],
+    ...        [256.0, 364.0, 1460.0]]
     >>> [np.around(arr,8) for arr in shoulderAxisCalc(frame,thorax,shoulderJC,wand)] #doctest: +NORMALIZE_WHITESPACE
-    [array([[ 429.66951995,  275.06718615, 1453.95397813],
-           [  64.51952734,  274.93442161, 1463.6313334 ]]),
-    array([[[ 430.12731331,  275.95136619, 1454.04698829],
-            [ 429.68621685,  275.16323377, 1452.95874144],
-            [ 428.78061813,  275.52435188, 1453.98318503]],
-           [[  64.10400325,  275.83192827, 1463.77905455],
-            [  64.59882849,  274.80838068, 1464.62018375],
-            [  65.42564602,  275.3570272 , 1463.61253313]]])]
+    [array([[ 429.,  275., 1453.],
+        [  64.,  274., 1463.]]), array([[[ 429.42559381,  275.79858614, 1453.42559381],
+            [ 429.16998447,  275.39138931, 1452.09561087],
+            [ 428.11119452,  275.45724675, 1453.03082562]],
+        [[  63.57556612,  274.90545894, 1463.        ],
+            [  64.01707729,  274.00800498, 1463.99982213],
+            [  64.90529788,  274.42435838, 1462.98113963]]])]
     """
 
 
@@ -1412,9 +1388,10 @@ def shoulderAxisCalc(frame,thorax,shoulderJC,wand):
 def elbowJointCenter(frame,thorax,shoulderJC,wand,vsk=None):
     """Calculate the Elbow joint axis ( Humerus) function.
 
-    Takes in a dictionary of x,y,z positions and marker names, as well as an index.
-    and takes the thorax axis and wand marker and then, shoulder joint center.
-    Calculate each elbow joint axis and returns it.
+    Takes in a dictionary of marker names to x, y, z positions, the thorax
+    axis, wand marker and shoulder joint center.
+
+    Calculates each elbow joint axis.
 
     Markers used: RSHO, LSHO, RELB, LELB, RWRA ,RWRB, LWRA, LWRB
     Subject Measurement values used: RightElbowWidth, LeftElbowWidth
@@ -1435,12 +1412,12 @@ def elbowJointCenter(frame,thorax,shoulderJC,wand,vsk=None):
     Returns
     -------
     origin, axis, wrist_O : array
-        Returns an array containing a 2x3 array containing the right
-        elbow x, y, z marker positions (1x3), and the left elbow x, y,
-        z marker positions (1x3), which is followed by a 2x3x3 array containing
+        Returns an array containing a :math:`2 \\times 3` array containing the right
+        elbow x, y, z marker positions :math:`1 \times 3`, and the left elbow x, y,
+        z marker positions :math:`1 \times 3`, which is followed by a :math:`2 \\times 3 \\times 3` array containing
         right elbow x, y, z axis components (1x3x3) followed by the left x, y, z axis
         components (1x3x3) which is then followed by the right wrist joint center
-        x, y, z marker positions (1x3), and the left wrist joint center x, y, z marker positions (1x3).
+        x, y, z marker positions :math:`1 \times 3`, and the left wrist joint center x, y, z marker positions :math:`1 \times 3`.
 
 
     Examples
@@ -1698,11 +1675,7 @@ def elbowJointCenter(frame,thorax,shoulderJC,wand,vsk=None):
 def wristJointCenter(frame,shoulderJC,wand,elbowJC):
     """Calculate the Wrist joint axis ( Radius) function.
 
-    Takes in a dictionary of x,y,z positions and marker names, as well as an index.
-    and takes the elbow axis and wand marker and then, shoulder joint center.
-    Calculate each wrist joint axis and returns it.
-
-    Markers used: RSHO, LSHO, RELB, LELB, RWRA ,RWRB, LWRA, LWRB
+    Takes in the elbow axis to calculate each wrist joint axis and returns it.
 
     Parameters
     ----------
@@ -1829,10 +1802,10 @@ def wristJointCenter(frame,shoulderJC,wand,elbowJC):
     return [origin,axis]
 
 def handJointCenter(frame,elbowJC,wristJC,vsk=None):
-    """Calculate the Hand joint axis ( Hand) function.
+    """Calculate the Hand joint axis (Hand).
 
-    Takes in a dictionary of x,y,z positions and marker names.
-    and takes the elbow axis and wrist axis.
+    Takes in a dictionary of marker names to x, y, z positions, wrist axis
+    subject measurements from a VSK file.
     Calculate each Hand joint axis and returns it.
 
     Markers used: RWRA, RWRB, LWRA, LWRB, RFIN, LFIN
@@ -1840,9 +1813,9 @@ def handJointCenter(frame,elbowJC,wristJC,vsk=None):
 
     Parameters
     ----------
-    frame
+    frame : dict
         Dictionaries of marker lists.
-    elbowJC : array
+    elbowJC : array, optional
         The x,y,z position of the elbow joint center.
     wristJC : array
         The x,y,z position of the wrist joint center.
@@ -1853,8 +1826,8 @@ def handJointCenter(frame,elbowJC,wristJC,vsk=None):
     -------
     origin, axis : array
         Returns an array containing an array representing the right hand joint center
-        x, y, z marker positions (1x3), followed by an array containing the
-        left hand joint center x, y, z marker positions (1x3), followed by a 2x3x3 array
+        x, y, z marker positions :math:`1 \times 3`, followed by an array containing the
+        left hand joint center x, y, z marker positions :math:`1 \times 3`, followed by a :math:`2 \\times 3 \\times 3` array
         containing the right hand joint center x, y, z axis components (1x3x3),
         followed by the left hand joint center x, y, z axis components (1x3x3).
 
@@ -1978,9 +1951,10 @@ def handJointCenter(frame,elbowJC,wristJC,vsk=None):
     return [origin,axis]
 
 def findJointC(a, b, c, delta):
-    """Calculate the Joint Center function.
+    """Calculate the Joint Center.
 
-    This function is based on physical markers, a,b,c and joint center which will be calulcated in this function are all in the same plane.
+    This function is based on physical markers, a,b,c and joint center which
+    will be calulcated in this function are all in the same plane.
 
     Parameters
     ----------
@@ -1992,7 +1966,7 @@ def findJointC(a, b, c, delta):
     Returns
     -------
     mr : array
-        Returns the Joint C x, y, z positions in a 1x3 array.
+        Returns the Joint C x, y, z positions in a :math:`1 \\times 3` array.
 
     Examples
     --------
@@ -2046,7 +2020,7 @@ def findJointC(a, b, c, delta):
     return mr
 
 def cross(a, b):
-    """Cross Product function
+    """Cross Product.
 
     Given vectors a and b, calculate the cross product.
 
@@ -2078,11 +2052,12 @@ def cross(a, b):
     return c
 
 def getPelangle(axisP,axisD):
-    """Pelvis angle calculation function.
+    """Pelvis angle calculation.
 
-    This function takes in two axis and returns three angles.
-    and It uses the inverse Euler rotation matrix in YXZ order.
-    the output shows the angle in degrees.
+    This function takes in two axes and returns three angles and uses the
+    inverse Euler rotation matrix in YXZ order.
+
+    Returns the angles in degrees.
 
     Parameters
     ----------
@@ -2094,7 +2069,7 @@ def getPelangle(axisP,axisD):
     Returns
     -------
     angle : list
-        Returns the gamma, beta, alpha angles in degrees in a 1x3 corresponding list.
+        Returns the gamma, beta, alpha angles in degrees in a :math:`1 \\times 3` corresponding list.
 
     Examples
     -------
@@ -2131,9 +2106,10 @@ def getPelangle(axisP,axisD):
 def getHeadangle(axisP,axisD):
     """Head angle calculation function.
 
-    This function takes in two axis and returns three angles.
-    and It uses the inverse Euler rotation matrix in YXZ order.
-    the output shows the angle in degrees.
+    This function takes in two axes and returns three angles and uses the
+    inverse Euler rotation matrix in YXZ order.
+
+    Returns the angles in degrees.
 
     Parameters
     ----------
@@ -2145,7 +2121,7 @@ def getHeadangle(axisP,axisD):
     Returns
     -------
     angle : list
-        Returns the gamma, beta, alpha angles in degrees in a 1x3 corresponding list.
+        Returns the gamma, beta, alpha angles in degrees in a :math:`1 \\times 3` corresponding list.
 
     Examples
     --------
@@ -2210,11 +2186,12 @@ def getHeadangle(axisP,axisD):
     return angle
 
 def getangle_sho(axisP,axisD):
-    """Shoulder angle calculation function.
+    """Shoulder angle calculation.
 
-    This function takes in two axis and returns three angles.
-    and It use inverse Euler rotation matrix in XYZ order.
-    the output shows the angle in degrees.
+    This function takes in two axes and returns three angles and uses the
+    inverse Euler rotation matrix in YXZ order.
+
+    Returns the angles in degrees.
 
     Parameters
     ----------
@@ -2226,7 +2203,7 @@ def getangle_sho(axisP,axisD):
     Returns
     -------
     angle : list
-        Returns the gamma, beta, alpha angles in degrees in a 1x3 corresponding list.
+        Returns the gamma, beta, alpha angles in degrees in a :math:`1 \\times 3` corresponding list.
 
     Examples
     --------
@@ -2256,11 +2233,12 @@ def getangle_sho(axisP,axisD):
     return angle
 
 def getangle_spi(axisP,axisD):
-    """Spine angle calculation function.
+    """Spine angle calculation.
 
-    This function takes in two axis and returns three angles.
-    and It use inverse Euler rotation matrix in XZX order.
-    the output shows the angle in degrees.
+    This function takes in two axes and returns three angles and uses the
+    inverse Euler rotation matrix in YXZ order.
+
+    Returns the angles in degrees.
 
     Parameters
     ----------
@@ -2272,7 +2250,7 @@ def getangle_spi(axisP,axisD):
     Returns
     -------
     angle : list
-        Returns the gamma, beta, alpha angles in degrees in a 1x3 corresponding list.
+        Returns the gamma, beta, alpha angles in degrees in a :math:`1 \\times 3` corresponding list.
 
     Examples
     --------
@@ -2298,11 +2276,12 @@ def getangle_spi(axisP,axisD):
     return angle
 
 def getangle(axisP,axisD):
-    """Normal angle calculation function.
+    """Normal angle calculation.
 
-    This function takes in two axis and returns three angles.
-    and It use inverse Euler rotation matrix in YXZ order.
-    the output shows the angle in degrees.
+    This function takes in two axes and returns three angles and uses the
+    inverse Euler rotation matrix in YXZ order.
+
+    Returns the angles in degrees.
 
     As we use arc sin we have to care about if the angle is in area between -pi/2 to pi/2
 
@@ -2316,7 +2295,7 @@ def getangle(axisP,axisD):
     Returns
     -------
     angle : list
-        Returns the gamma, beta, alpha angles in degrees in a 1x3 corresponding list.
+        Returns the gamma, beta, alpha angles in degrees in a :math:`1 \\times 3` corresponding list.
 
     Examples
     --------
@@ -2338,7 +2317,7 @@ def getangle(axisP,axisD):
     ang=((-1*axisD[2][0]*axisP[1][0])+(-1*axisD[2][1]*axisP[1][1])+(-1*axisD[2][2]*axisP[1][2]))
     alpha = np.nan
     if -1<=ang<=1:
-#       alpha = np.arcsin(ang)
+    #   alpha = np.arcsin(ang)
         alpha = np.arcsin(ang)
 
     # check the abduction angle is in the area between -pi/2 and pi/2
@@ -2359,7 +2338,7 @@ def getangle(axisP,axisD):
     return angle
 
 def norm2d(v):
-    """2D Vector normalization function
+    """2D Vector normalization.
 
     This function calculates the normalization of a 3-dimensional vector.
 
@@ -2387,7 +2366,7 @@ def norm2d(v):
         return np.nan
 
 def norm3d(v):
-    """3D Vector normalization function
+    """3D Vector normalization.
 
     This function calculates the normalization of a 3-dimensional vector.
 
@@ -2414,7 +2393,7 @@ def norm3d(v):
         return np.nan
 
 def normDiv(v):
-    """Normalized divison function
+    """Normalized divison.
 
     This function calculates the normalization division of a 3-dimensional vector.
 
@@ -2445,7 +2424,7 @@ def normDiv(v):
     return [v[0]/vec,v[1]/vec,v[2]/vec]
 
 def matrixmult (A, B):
-    """Matrix multiplication function
+    """Matrix multiplication.
 
     This function returns the product of a matrix multiplication given two matrices.
 
@@ -2483,7 +2462,7 @@ def matrixmult (A, B):
     return C
 
 def rotmat(x=0,y=0,z=0):
-    """Rotation Matrix function
+    """Rotation Matrix.
 
     This function creates and returns a rotation matrix.
 
@@ -2538,7 +2517,8 @@ def rotmat(x=0,y=0,z=0):
 
 
 def JointAngleCalc(frame,vsk):
-    """ Joint Angle Calculation function
+    """ Joint Angle Calculation function.
+
     Calculates the Joint angles of plugingait and stores the data in array
     Stores
         RPel_angle = []
@@ -2552,9 +2532,9 @@ def JointAngleCalc(frame,vsk):
 
     Joint Axis store like below form
 
-    Basically, the axis form is like [[origin],[axis]]
-    So, there's origin which define the position of axis
-    and there's Unit vector of each axis which is attach to the origin.
+    The axis form is in the form [[origin],[axis]]
+    Origin defines the position of axis and axis is the unit vector of each
+    axis attached to the origin
 
     If it is just single one (Pelvis, Hip, Head, Thorax)
 
