@@ -153,18 +153,19 @@ def loadC3D(filename):
     dataunlabeled = []
     prog_val = 1
     counter = 0
-    data_length = reader.last_frame() - reader.first_frame()
+    data_length = reader.last_frame - reader.first_frame
     markers=[str(label.rstrip()) for label in labels]
-    
-    for frame_no, points, analog in reader.read_frames(True,True):
+
+    for frame_no, points, analog in reader.read_frames(True):
         for label, point in zip(markers, points):
-            #Create a dictionary with format LFHDX: 123 
+            #Create a dictionary with format LFHDX: 123
+            point = point[:3]
             if label[0]=='*':
                 if point[0]!=np.nan:
                     mydictunlabeled[label]=point
             else:
                 mydict[label] = point
-            
+
         data.append(mydict)
         dataunlabeled.append(mydictunlabeled)
         mydict = {}
@@ -246,19 +247,19 @@ def loadCSV(filename):
             break
     rows=iter(rows)
     labels,motionData,unlabeledMotionData,freq=parseTrajectories(rows,framesNumber)
-    
+
     return [motionData,unlabeledMotionData,labels]
 
 def loadData(filename,rawData=True):
         if str(filename).endswith('.c3d'):
                 return loadC3D(filename)[0]
-                
+
         elif str(filename).endswith('.csv'):
-                return loadCSV(filename)[0]		
+                return loadCSV(filename)[0]
 
 def writeResult(data,filename,**kargs):
         """
-        Writes the result of the calculation into a csv file 
+        Writes the result of the calculation into a csv file
         @param data Motion Data as a matrix of frames as rows
         @param filename Name to save the csv
         @param kargs
@@ -380,16 +381,16 @@ def loadVSK(filename):
         # Create Dictionary to store values from VSK file
         viconVSK = {}
         vskMarkers = []
-        
+
         #Create an XML tree from file
         tree = ET.parse(filename)
         #Get the root of the file
         # <KinematicModel>
         root = tree.getroot()
-        
+
         # for i in range(len(root[2][0])):
         #     vskMarkers.append(root[2][0][i].get('NAME'))
-        
+
         #Store the values of each parameter in a dictionary
         # the format is (NAME,VALUE)
         vsk_keys=[r.get('NAME') for r in root[0]]
@@ -405,12 +406,12 @@ def loadVSK(filename):
         return [vsk_keys,vsk_data]
 
 
-def splitDataDict(motionData):        
+def splitDataDict(motionData):
     labels = motionData[0].keys()
     values = []
     for i in range(len(motionData)):
         values.append(np.asarray(motionData[i].values()))
-        
+
     return values,labels
 
 def combineDataDict(values,labels):
@@ -421,9 +422,9 @@ def combineDataDict(values,labels):
             tmp_dict[labels[j]]=values[i][j]
         data.append(tmp_dict)
         tmp_dict = {}
-        
+
     return data
-        
+
 
 def make_sure_path_exists(path):
     try:
