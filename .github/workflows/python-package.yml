@@ -5,13 +5,12 @@ name: Python package
 
 on:
   push:
-    branches: [ master, dev ]
+    branches: [ master, dev, fix39, fixc3d ]
   pull_request:
-    branches: [ master, dev ]
+    branches: [ master, dev, fix39, fixc3d ]
 
 jobs:
-  build2:
-
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
