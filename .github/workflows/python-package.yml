@@ -5,9 +5,9 @@ name: Python package
 
 on:
   push:
-    branches: [ master, dev, fix39, fixc3d ]
+    branches: [ master, dev, fix39, fixc3d, dev-refactor-docs ]
   pull_request:
-    branches: [ master, dev, fix39, fixc3d ]
+    branches: [ master, dev, fix39, fixc3d, dev-refactor-docs ]
 
 jobs:
   build:
