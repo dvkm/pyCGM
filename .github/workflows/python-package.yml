@@ -3,11 +3,7 @@
 
 name: Python package
 
-on:
-  push:
-    branches: [ master, dev, fix39, fixc3d, dev-refactor-docs ]
-  pull_request:
-    branches: [ master, dev, fix39, fixc3d, dev-refactor-docs ]
+on: [push, pull_request]
 
 jobs:
   build:
